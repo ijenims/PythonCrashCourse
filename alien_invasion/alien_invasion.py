@@ -35,8 +35,8 @@ class AlienInvasion:
         while True:
             self._check_events()
             self.ship.update()
-            self.bullets.update()
-            self._update_screen()           
+            self._update_bullets()
+            self._update_screen()
 
 
     def _check_events(self):
@@ -75,8 +75,20 @@ class AlienInvasion:
 
     def _fire_bullet(self):
         ''' 新しい弾を生成し、bullets グループに追加する '''
-        new_bullet = Bullet(self)
-        self.bullets.add(new_bullet)
+        if len(self.bullets) < self.settings.bullets_allowed:
+            new_bullet = Bullet(self)
+            self.bullets.add(new_bullet)
+
+
+    def _update_bullets(self):
+        ''' 弾の位置を更新し、古い弾を廃棄する '''
+        # 弾の位置を更新する
+        self.bullets.update()
+
+        # 見えなくなった弾を廃棄する
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom <= 0:
+                self.bullets.remove(bullet)
 
 
     def _update_screen(self):

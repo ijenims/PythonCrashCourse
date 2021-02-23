@@ -97,9 +97,19 @@ class AlienInvasion:
 
     def _create_fleet(self):
         ''' エイリアンの艦隊を作成する '''
-        #1匹のエイリアンを作成する
+        # エイリアンを1匹作成し、1列のエイリアンの数を求める
         alien = Alien(self)
-        self.aliens.add(alien)
+        alien_width = alien.rect.width
+        available_space_x = self.settings.screen_width - (2 * alien_width)
+        number_aliens_x = available_space_x // (2 * alien_width)
+
+        # 最初の列のエイリアンを作成する
+        for alien_number in range(number_aliens_x):
+            # エイリアンを1匹作成し列の中に配置する
+            alien = Alien(self)
+            alien.x = alien_width + 2 * alien_width * alien_number
+            alien.rect.x = alien.x
+            self.aliens.add(alien)
 
     
     def _update_screen(self):

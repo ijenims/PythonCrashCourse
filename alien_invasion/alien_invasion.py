@@ -1,9 +1,12 @@
 ''' support : https://gihyo.jp/book/2020/978-4-297-11572-2/support '''
 
 import sys
+from time import sleep
+
 import pygame
 
 from settings import Settings
+from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -25,7 +28,10 @@ class AlienInvasion:
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         
-        pygame.display.set_caption('エイリアン攻略')
+        pygame.display.set_caption('Alien Invasion')
+
+        # ゲームの統計情報を格納するインスタンスを生成する
+        self.stats = GameStats(self)
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
@@ -95,12 +101,30 @@ class AlienInvasion:
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
 
+        self._check_bullet_alien_collisions()
+
+
+    def _check_bullet_alien_collisions(self):
+        ''' 弾とエイリアンの衝突に対応する '''
+        # 衝突した弾とエイリアンを削除する
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, False, True)  # for test => True, True
+
+        if not self.aliens:
+            # 存在する弾を破壊し、新しい艦隊を作成する
+            self.bullets.empty()
+            self._create_fleet()
+
 
     def _update_aliens(self):
         ''' 艦隊が画面の端にいるか確認してから
             艦隊にいるエイリアンの位置を更新する '''
         self._check_fleet_edges()
         self.aliens.update()
+
+        # エイリアンと宇宙船の衝突を探す
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
 
 
     def _create_fleet(self):
@@ -158,6 +182,24 @@ class AlienInvasion:
 
         # 最新の状態の画面を表示する
         pygame.display.flip()
+
+
+    def _ship_hit(self):
+        ''' エイリアンと宇宙船の衝突に対応する '''
+        # 残りの宇宙船の数を減らす
+        self.stats.ships_left -= 1
+
+        # 残ったエイリアンと弾を破棄する
+        self.aliens.empty()
+        self.bullets.empty()
+
+        # 新しい艦隊を生成し宇宙船を中央に配置する
+        self._create_fleet()
+        self.ship.center_ship()
+
+        # 一時停止する
+        sleep(0.5)
+
 
 
 if __name__ == '__main__':
